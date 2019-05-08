@@ -9,5 +9,6 @@ object Dependencies {
   lazy val testing = Seq(scalactic, scalaTest, scalaCheck)
 
   lazy val cats = "org.typelevel" %% "cats-core" % "1.6.0"
+  lazy val catsEffect = "org.typelevel" %% "cats-effect" % "1.2.0"
 
 }

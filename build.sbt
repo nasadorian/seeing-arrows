@@ -33,8 +33,9 @@ lazy val commonSettings = Seq(
   scalastyleFailOnError           := true,
   scalacOptions                   := commonScalacOptions,
   scalacOptions in (Compile, doc) := (scalacOptions in (Compile, doc)).value filterNot (_ == "-Xfatal-warnings"),
-
-  libraryDependencies ++= Seq(Dependencies.cats),
+  
+  libraryDependencies ++= Seq(Dependencies.cats, Dependencies.catsEffect),
+  
   // Wart Remover settings
   wartremoverErrors in (Compile, compile) ++= Seq(
     Wart.EitherProjectionPartial, // bans calling `get` on an `Either.LeftProjection` or `Either.RightProjection`

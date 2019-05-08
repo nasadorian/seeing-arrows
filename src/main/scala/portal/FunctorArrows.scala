@@ -33,38 +33,70 @@ object FunctorArrows {
    *  An alternative formulation at the function level.
    */
   val nameToFeature2: String => Option[PFeature] =
-    getPerson _ map (Functor[Option] lift personFeature)
+    getPerson _ andThen (Functor[Option] lift personFeature)
 
+  /**
+   * [[optLift]] lifts function `B => C`  and composes it with arrow `A => Option[B]`
+   */
+  def optLift[A, B, C]: (B => C) => (A => Option[B]) => (A => Option[C]) =
+    f => Functor[A => ?] compose Functor[Option] lift f
+
+  def composeF[A, B, C, F[_]](implicit F: Functor[F]): (B => C) => (A => F[B]) => (A => F[C]) =
+    f => Functor[A => ?] compose F lift f
+
+  /**
+   * Third implementation in terms of [[optLift]]
+   */
+  val nameToFeature3: String => Option[PFeature] =
+    optLift(personFeature)(getPerson)
 
   /**
    * Pull many people from the "database"
    */
-  def getPeople(names: List[String]): List[Option[Person]] =
-    names map getPerson
+  val getPeople: List[String] => List[Option[Person]] =
+    _ map getPerson
 
   /**
    * Extract features for every Person entry
    */
-  def peopleFeatures(ppl: List[Option[Person]]): List[Option[PFeature]] =
-    ((Functor[List] compose Functor[Option]) lift personFeature)(ppl)
+  val peopleFeatures: List[Option[Person]] => List[Option[PFeature]] =
+    (Functor[List] compose Functor[Option]) lift personFeature
 
   /**
    * Contramapping [[getPeople]] before [[peopleFeatures]]
    */
-  val getAndFeaturePeople: List[String] => List[Option[PFeature]] =
+  val getAndFeaturizePeople: List[String] => List[Option[PFeature]] =
     Contravariant[? => List[Option[PFeature]]]
       .contramap(peopleFeatures)(getPeople)
+
+  val getAndFeaturizePeople2: List[String] => List[Option[PFeature]] =
+      getPeople andThen peopleFeatures
 
   /**
    * Or more simply... [[Function1.andThen]]
    */
   val getAndFeaturePeople2: List[String] => List[Option[PFeature]] =
-    getPeople _ andThen peopleFeatures
+    getPeople andThen peopleFeatures
 
   /**
    * Tying it all together and extracting out the relevant features
    */
   val featurePipeline: List[String] => List[PFeature] =
     Profunctor[Function1].dimap(peopleFeatures)(getPeople)(_.mapFilter(x => x))
+
+  val featurePipeline2: List[String] => List[PFeature] =
+    peopleFeatures.dimap(getPeople)(_.mapFilter(x => x))
+
+  /**
+   * Or in terms of [[Function1.andThen]]
+   */
+  val featurePipeline3: List[String] => List[PFeature] =
+    getPeople andThen peopleFeatures andThen (_.mapFilter(x => x))
+
+  /**
+   * Or even fancier in terms of [[Profunctor.dimap]]
+   */
+  val featurePipeline3p: List[String] => List[PFeature] =
+    peopleFeatures.dimap(getPeople)(_.mapFilter(x => x))
 
 }
