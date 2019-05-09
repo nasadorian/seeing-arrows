@@ -11,22 +11,11 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.12.8"
 )
 
-///////////////////////////////////////////////////////////
-// Maven credentials settings
-
-def getMavenCredentials(file: File): Credentials = {
-  val realm = "Artifactory Realm"
-  val host  = Resolvers.artifactoryHost
-  val creds = (xml.XML.loadFile(file) \ "servers" \ "server").head
-  Credentials(realm, host, (creds \ "username").text, (creds \ "password").text)
-}
 
 ///////////////////////////////////////////////////////////
 // Common build settings
 
 lazy val commonSettings = Seq(
-  credentials                     += getMavenCredentials(Path.userHome / ".m2" / "settings.xml"),
-  resolvers                      ++= Resolvers.mavenResolvers,
   parallelExecution in Test       := false,
   connectInput                    := true,
   updateOptions                   := updateOptions.value.withCachedResolution(true),
@@ -49,13 +38,6 @@ lazy val commonSettings = Seq(
     Wart.TryPartial               // bans calling `get` on a `Try` (use `Try#map` and `Try#getOrElse` instead)
   )
 ) ++ warnUnusedImport ++ inlineWarnings
-
-///////////////////////////////////////////////////////////
-// Publish settings
-
-publishTo := {
-	if (isSnapshot.value) Some(Resolvers.snapshots) else Some(Resolvers.releases)
-}
 
 ///////////////////////////////////////////////////////////
 // Release settings
